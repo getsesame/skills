@@ -67,7 +67,17 @@ Expected output when ready:
 If `logged_in` is false or the command fails, tell the user:
 > You need to register this agent with Sesame first. Run: `secretctl login`
 
-### Step 2: Make the Authenticated Request
+### Step 2: Check Available Hostnames
+
+To see which API hostnames have secrets configured, run:
+
+```bash
+secretctl hostnames --json
+```
+
+This returns a list of hostnames like `["api.github.com", "api.openai.com"]`. Only these hostnames can be used with `secretctl request`. For any hostname not in this list, use a normal `curl` request instead or ask the user to add the secret in the Sesame dashboard.
+
+### Step 3: Make the Authenticated Request
 
 Use `secretctl request` instead of `curl`, `httpx`, `requests`, or `fetch`:
 
@@ -88,7 +98,7 @@ secretctl request <METHOD> <URL> [-H "Header: Value"] [-d "body"] [--raw] [--tim
 - Do NOT attempt to read, extract, log, or store any secret values.
 - Always include `Content-Type` header when sending JSON bodies.
 
-### Step 3: Handle the Response
+### Step 4: Handle the Response
 
 **Default output** (without `--raw`):
 ```json
