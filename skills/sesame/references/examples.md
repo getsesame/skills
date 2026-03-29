@@ -1,6 +1,30 @@
 # Sesame Usage Examples
 
+## Before Making Requests
+
+Always check available hostnames first:
+
+```bash
+secretctl hostnames
+```
+
+Only use `secretctl request` for hostnames in this list. For other hostnames, use `curl` directly.
+
 ## REST API Patterns
+
+### Anthropic API
+
+```bash
+# List models
+secretctl request GET "https://api.anthropic.com/v1/models" \
+  -H "anthropic-version: 2023-06-01" --raw
+
+# Chat completion
+secretctl request POST "https://api.anthropic.com/v1/messages" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{"model": "claude-sonnet-4-20250514", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'
+```
 
 ### GitHub API
 

@@ -12,7 +12,7 @@ description: >-
 allowed-tools: "Bash(secretctl:*)"
 metadata:
   author: getsesame
-  version: 0.1.0
+  version: 0.3.0
 ---
 
 # Sesame - Secure API Credential Injection
@@ -30,13 +30,13 @@ NEVER include API keys, bearer tokens, or credentials in HTTP requests directly.
 If `secretctl` is not available, install it:
 
 ```bash
-uv tool install sesame-ctl
+curl -fsSL https://getsesame.dev/install.sh | sh
 ```
 
-If `uv` is not available, fall back to:
+This downloads a standalone binary — no Python or pip required. Verify with:
 
 ```bash
-pip install sesame-ctl
+secretctl --version
 ```
 
 ### Register the agent
@@ -47,7 +47,25 @@ If this agent is not yet registered with the Sesame broker, run:
 secretctl login
 ```
 
-This generates a claim URL the user opens in their browser to approve the agent.
+There are two registration modes:
+
+- **Mode B (default):** Agent-initiated. Generates a claim URL the user opens in their browser to approve the agent.
+- **Mode A (dashboard-initiated):** User creates a registration link in the dashboard and passes it to the agent:
+  ```bash
+  secretctl login sesame-register:<token>
+  ```
+  Or with a bootstrap token directly:
+  ```bash
+  secretctl login --bootstrap-token <token>
+  ```
+
+The default broker is `https://getsesame.dev`. Override with `--broker-url` or the `SESAME_BROKER_URL` env var for self-hosted brokers.
+
+If an agent is already registered on this device, `secretctl login` will warn and suggest `secretctl refresh` instead. To register an additional agent, use `--new`:
+
+```bash
+secretctl login --new
+```
 
 ## Instructions
 
@@ -56,33 +74,45 @@ This generates a claim URL the user opens in their browser to approve the agent.
 Before making any authenticated request, verify the agent is registered:
 
 ```bash
-secretctl status --json
+secretctl status
 ```
 
 Expected output when ready:
-```json
-{"installed": true, "logged_in": true, "agent_id": "...", "broker_url": "...", "token_valid": true}
+```
+Device fingerprint: abc123...
+Agents (1):
+   * <agent-id>
+Active: <agent-id>
+Tokens: present
 ```
 
-If `logged_in` is false or the command fails, tell the user:
+If no device identity exists or no agents are shown, tell the user:
 > You need to register this agent with Sesame first. Run: `secretctl login`
 
-### Step 2: Check Available Hostnames
+### Step 2: Check Available Hostnames (REQUIRED)
 
-To see which API hostnames have secrets configured, run:
+Before making ANY authenticated HTTP request, ALWAYS check which hostnames have secrets configured:
+
+```bash
+secretctl hostnames
+```
+
+Or for machine-readable output:
 
 ```bash
 secretctl hostnames --json
 ```
 
-This returns a list of hostnames like `["api.github.com", "api.openai.com"]`. Only these hostnames can be used with `secretctl request`. For any hostname not in this list, use a normal `curl` request instead or ask the user to add the secret in the Sesame dashboard.
+This returns hostnames like `api.github.com`, `api.openai.com`. **Only use `secretctl request` for hostnames in this list.** For any hostname NOT in this list, use a normal `curl` request instead or ask the user to add the secret in the Sesame dashboard.
+
+This step prevents unnecessary Telegram approval prompts and failed requests.
 
 ### Step 3: Make the Authenticated Request
 
 Use `secretctl request` instead of `curl`, `httpx`, `requests`, or `fetch`:
 
 ```bash
-secretctl request <METHOD> <URL> [-H "Header: Value"] [-d "body"] [--raw] [--timeout SECONDS]
+secretctl request <METHOD> <URL> [-H "Header: Value"] [-d "body"] [--raw]
 ```
 
 **Parameters:**
@@ -91,7 +121,6 @@ secretctl request <METHOD> <URL> [-H "Header: Value"] [-d "body"] [--raw] [--tim
 - `-H "Key: Value"`: Additional headers (repeatable). Do NOT pass auth headers.
 - `-d "body"`: Request body (typically JSON string)
 - `--raw`: Output just the response body (no JSON wrapper). Use for piping to `jq` or when you need raw content.
-- `--timeout SECONDS`: Request timeout (default 310s, to allow time for user approval)
 
 **Rules:**
 - Do NOT pass `Authorization`, `X-API-Key`, `Bearer`, or any credential headers via `-H`. The broker injects these automatically based on the target hostname.
@@ -125,11 +154,14 @@ The first request to a **new hostname** may block for up to 5 minutes while the 
 2. Wait for the command to complete (do not kill it).
 3. Once approved, subsequent requests to the same hostname will succeed immediately (authorization is cached for the duration the user selected).
 
+If the request is denied by policy (e.g., wrong HTTP method or restricted path), secretctl will print an "Access denied" message with details about the policy restriction. Ask the secret owner to update the policy in the Sesame dashboard.
+
 ## What Sesame Handles Automatically
 
-- **Token refresh**: Access tokens are auto-refreshed when expired
+- **Token refresh**: Access tokens are auto-refreshed when expired (challenge-response with Ed25519 device key)
 - **Credential injection**: Based on the hostname, the broker injects the right credential (Bearer token, Basic auth, custom header, or query parameter)
 - **Challenge-response auth**: Device identity is verified cryptographically via Ed25519
+- **Policy enforcement**: Per-secret policies can restrict allowed methods, paths, and subdomains
 
 ## When NOT to Use Sesame
 
@@ -145,13 +177,15 @@ Consult `references/troubleshooting.md` for detailed error recovery.
 
 | Symptom | Solution |
 |---------|----------|
-| `secretctl: command not found` | `uv tool install sesame-ctl` |
+| `secretctl: command not found` | `curl -fsSL https://getsesame.dev/install.sh \| sh` |
 | "No device identity" | `secretctl login` |
 | "No tokens found" | `secretctl login` or `secretctl refresh` |
+| "You already have an active agent" | Use `secretctl refresh` or `secretctl login --new` |
 | Request hangs for minutes | User needs to approve on Telegram - tell them |
 | 403 after waiting | User denied access - ask them to retry and approve |
-| "No secret configured for hostname" | Please make a normal cURL request or ask the user to add the secret in the Sesame dashboard |
-| Connection refused | Broker may be down - check `SESAME_BROKER_URL` |
+| "Access denied" with policy details | Policy restricts this request - ask owner to update in dashboard |
+| "No secret configured for hostname" | Make a normal cURL request or ask user to add secret in dashboard |
+| Connection refused | Broker may be down - check `secretctl status` |
 
 ## Examples
 
@@ -160,6 +194,9 @@ See `references/examples.md` for comprehensive API patterns.
 ### Common Patterns
 
 ```bash
+# Always check available hostnames first
+secretctl hostnames
+
 # GET request to GitHub API
 secretctl request GET "https://api.github.com/repos/owner/repo" --raw
 
@@ -168,16 +205,21 @@ secretctl request POST "https://api.openai.com/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
 
-# PUT to update a resource
-secretctl request PUT "https://api.example.com/items/123" \
+# POST to Anthropic
+secretctl request POST "https://api.anthropic.com/v1/messages" \
   -H "Content-Type: application/json" \
-  -d '{"name": "updated"}'
+  -H "anthropic-version: 2023-06-01" \
+  -d '{"model": "claude-sonnet-4-20250514", "max_tokens": 1024, "messages": [{"role": "user", "content": "Hello"}]}'
 
-# DELETE a resource
-secretctl request DELETE "https://api.example.com/items/123"
+# List Anthropic models
+secretctl request GET "https://api.anthropic.com/v1/models" \
+  -H "anthropic-version: 2023-06-01" --raw
 
 # POST to Slack
 secretctl request POST "https://slack.com/api/chat.postMessage" \
   -H "Content-Type: application/json" \
   -d '{"channel": "C01234", "text": "Hello from the agent!"}'
+
+# DELETE a resource
+secretctl request DELETE "https://api.example.com/items/123"
 ```

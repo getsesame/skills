@@ -7,12 +7,12 @@ The Sesame CLI is not installed or not on PATH.
 
 **Solution:**
 ```bash
-uv tool install sesame-ctl
-# or
-pip install sesame-ctl
+curl -fsSL https://getsesame.dev/install.sh | sh
 ```
 
-If installed but not found, check that the Python scripts directory is on your PATH.
+This installs a standalone binary. No Python or pip required.
+
+If installed but not found, ensure the install location is on your PATH (default: `/usr/local/bin` or `~/.local/bin`).
 
 ## Authentication Issues
 
@@ -24,7 +24,14 @@ No Ed25519 device keypair exists. This means the agent has never been registered
 secretctl login
 ```
 
-This will generate a claim URL for the user to open in their browser to approve the agent.
+This will generate a claim URL for the user to open in their browser to approve the agent. The default broker is `https://getsesame.dev`.
+
+### "You already have an active agent"
+An agent is already registered on this device.
+
+**Solution:**
+- To re-authenticate the existing agent: `secretctl refresh`
+- To register an additional agent: `secretctl login --new`
 
 ### "No tokens found"
 Device identity exists but no access/refresh tokens are stored.
@@ -48,7 +55,7 @@ Both token refresh and challenge-response auth failed.
 - Device keys have been corrupted
 
 **Solution:**
-1. Check broker connectivity: `curl -s $SESAME_BROKER_URL/health`
+1. Check broker connectivity: `curl -s https://getsesame.dev/health`
 2. Re-register: `secretctl login --new`
 
 ## Request Issues
@@ -58,7 +65,7 @@ The broker is waiting for the user to approve access to this hostname via Telegr
 
 **What to do:**
 1. Tell the user to check their Telegram app
-2. The approval message shows the hostname and offers duration options (1h, 4h, 8h, 24h)
+2. The approval message shows the hostname and offers duration options and policy presets (full access, read-only, custom)
 3. Once approved, subsequent requests to the same hostname will be instant
 
 ### 403 "Access denied by user"
@@ -69,8 +76,16 @@ The user explicitly denied the access request on Telegram.
 2. If it was a mistake, retry the request - a new approval prompt will be sent
 3. The user can also grant access proactively via the Sesame dashboard
 
+### 403 "Access denied" with policy details
+The request was blocked by the access policy set for this secret (e.g., wrong HTTP method, restricted path, disallowed subdomain).
+
+**Solution:**
+Ask the secret owner to update the policy in the Sesame dashboard. The error message includes the specific reason (method not allowed, path denied, etc.).
+
 ### 422 "No secret configured for hostname"
 The broker has no secret mapped to the target hostname.
+
+**Prevention:** Always run `secretctl hostnames` before making requests to check which hostnames are available.
 
 **Solution:**
 Make a normal cURL request instead, or tell the user: "No secret is configured in Sesame for [hostname]. Please add it in the Sesame dashboard:
@@ -83,8 +98,8 @@ Make a normal cURL request instead, or tell the user: "No secret is configured i
 The broker server is unreachable.
 
 **Checklist:**
-1. Check `SESAME_BROKER_URL` environment variable
-2. Verify broker is running: `curl -s $SESAME_BROKER_URL/health`
+1. Check broker health: `curl -s https://getsesame.dev/health`
+2. Verify agent status: `secretctl status`
 3. Check network connectivity
 
 ### HTTP error responses (4xx, 5xx)
