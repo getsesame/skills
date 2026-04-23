@@ -6,13 +6,9 @@
 The Sesame CLI is not installed or not on PATH.
 
 **Solution:**
-```bash
-curl -fsSL https://getsesame.dev/install.sh | sh
-```
+Ask the user to install `secretctl` by following the instructions at https://getsesame.dev. Do not attempt to install it automatically.
 
-This installs a standalone binary. No Python or pip required.
-
-If installed but not found, ensure the install location is on your PATH (default: `/usr/local/bin` or `~/.local/bin`).
+If installed but not found, ensure the install location is on the user's PATH (default: `/usr/local/bin` or `~/.local/bin`).
 
 ## Authentication Issues
 
@@ -83,16 +79,16 @@ The request was blocked by the access policy set for this secret (e.g., wrong HT
 Ask the secret owner to update the policy in the Sesame dashboard. The error message includes the specific reason (method not allowed, path denied, etc.).
 
 ### 422 "No secret configured for hostname"
-The broker has no secret mapped to the target hostname.
+The broker has nothing mapped to the target hostname.
 
 **Prevention:** Always run `secretctl hostnames` before making requests to check which hostnames are available.
 
 **Solution:**
-Make a normal cURL request instead, or tell the user: "No secret is configured in Sesame for [hostname]. Please add it in the Sesame dashboard:
+Make a normal cURL request instead, or tell the user: "Nothing is configured in Sesame for [hostname]. Please add it in the Sesame dashboard:
 1. Go to the Sesame web dashboard
-2. Add a new secret with the hostname [hostname]
-3. Set the injection mode (Bearer, Basic, Header, or Query)
-4. Store the credential value"
+2. Add a new entry for the hostname [hostname]
+3. Set the attachment mode (Bearer, Basic, Header, or Query)
+4. Store the token value"
 
 ### Connection errors / timeouts
 The broker server is unreachable.

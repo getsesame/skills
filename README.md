@@ -1,6 +1,6 @@
 # Sesame Skills
 
-Agent skills for [Sesame](https://github.com/getsesame) — a secret broker that lets AI agents make authenticated API calls without ever seeing credentials.
+Agent skills for [Sesame](https://github.com/getsesame) — a user-controlled broker that proxies authenticated HTTP API calls, so agents don't need to handle auth material directly.
 
 ## Install
 
@@ -15,18 +15,18 @@ This auto-detects your agent platform (Claude Code, Codex, Cursor, etc.) and ins
 When installed, the Sesame skill teaches your AI agent to:
 
 1. Route authenticated HTTP requests through `secretctl request` instead of `curl`
-2. Check which API hostnames have secrets configured via `secretctl hostnames`
-3. Handle approval flows when accessing a new API for the first time
-4. Never hardcode, log, or store API keys — the broker injects credentials server-side
+2. Check which API hostnames are configured via `secretctl hostnames`
+3. Handle the approval flow the first time an agent reaches a new hostname
+4. Leave auth headers to the broker — the agent never needs to construct them
 
 ## Prerequisites
 
-- **secretctl** CLI installed: `uv tool install sesame-ctl`
+- **secretctl** CLI installed — see https://getsesame.dev for install instructions
 - Agent registered with your Sesame broker: `secretctl login`
-- At least one secret configured in the Sesame dashboard for the hostname you want to reach
+- At least one hostname configured in the Sesame dashboard
 
 ## Available skills
 
 | Skill | Description |
 |-------|-------------|
-| [sesame](skills/sesame/) | Secure API credential injection via secretctl |
+| [sesame](skills/sesame/) | Proxy authenticated API calls through the Sesame broker via `secretctl` |
