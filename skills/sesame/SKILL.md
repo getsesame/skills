@@ -1,25 +1,41 @@
 ---
 name: sesame
 description: >-
-  Make authenticated HTTP API calls without handling auth material in agent code.
-  Requests are proxied through your Sesame broker, which attaches the required
-  Authorization header server-side based on the target hostname. Use this when a
-  request needs auth and you would otherwise reach for curl, httpx, requests, or
-  fetch with a bearer token. Skip for unauthenticated public endpoints, localhost,
-  or when the relevant token is already in the environment.
+  Use this skill when the user asks to call an authenticated HTTP API (for
+  example "call the GitHub/OpenAI/Slack API", "hit an endpoint that needs a
+  bearer token") and the `secretctl` CLI is already installed on this device.
+  The agent invokes `secretctl request`, which forwards the HTTP call through
+  the user's own broker and attaches the auth header server-side. The skill
+  does not install software, does not read credentials from the environment,
+  and runs shell only within the fixed `secretctl` subcommand surface
+  (`request`, `status`, `hostnames`, `login`, `refresh`). Skip for
+  unauthenticated public endpoints, localhost services, or when the user has
+  already exported a token in the environment for direct use.
 allowed-tools: "Bash(secretctl:*)"
 metadata:
   author: getsesame
-  version: 0.3.0
+  version: 0.3.1
 ---
 
 # Sesame
 
-Sesame proxies authenticated HTTP requests through your user-controlled broker. Use `secretctl request` the way you would use `curl`; the broker attaches auth server-side based on the target hostname.
+Sesame proxies authenticated HTTP requests through a user-controlled broker. Use `secretctl request` the way you would use `curl`; the broker attaches auth server-side based on the target hostname.
 
 ## Rule
 
 All authenticated HTTP requests go through `secretctl request`. Do not add `Authorization` or `X-API-Key` headers yourself — the broker attaches them based on the target hostname.
+
+## Scope
+
+This skill is intentionally narrow. It does **not**:
+
+- Install, update, or uninstall any software. If `secretctl` is missing, ask the user to install it — the skill never runs installers, shell-piped downloads, or package-manager invocations.
+- Execute shell outside the `secretctl` subcommand surface (`request`, `status`, `hostnames`, `login`, `refresh`). No `bash -c`, `eval`, or interpreter hand-off.
+- Read, log, store, or transmit credentials. Auth material lives in the user's broker and is never visible to the agent.
+- Feed upstream response bodies to `sh`, `bash`, `eval`, `python`, `node`, or any interpreter.
+- Rewrite or redirect the user's request to services other than the hostname named in the URL argument to `secretctl request`.
+
+Command execution is bounded to one CLI with a fixed subcommand vocabulary, in the same pattern as discovery/package CLIs like `npx skills`.
 
 ## Prerequisites
 
@@ -33,9 +49,9 @@ which secretctl
 
 If the command is not found, stop and tell the user:
 
-> `secretctl` is not installed on this device. Please follow the install instructions at https://getsesame.dev and then run `secretctl login`. Once it's installed, ask me again.
+> `secretctl` is not installed on this device. Please follow Sesame's install instructions, then run `secretctl login`. Once it's installed, ask me again.
 
-Do not attempt to install `secretctl` automatically. Installation is a one-time setup the user performs themselves.
+Do not attempt to install `secretctl` automatically. Installation is a one-time setup the user performs themselves — the skill never runs installers.
 
 ### Register the agent
 
@@ -57,7 +73,7 @@ There are two registration modes:
   secretctl login --bootstrap-token <token>
   ```
 
-The default broker is `https://getsesame.dev`. Override with `--broker-url` or the `SESAME_BROKER_URL` env var for self-hosted brokers.
+The broker URL is configured at `secretctl` install time. Override for self-hosted brokers with `--broker-url` or the `SESAME_BROKER_URL` env var.
 
 If an agent is already registered on this device, `secretctl login` will warn and suggest `secretctl refresh` instead. To register an additional agent, use `--new`:
 
@@ -186,7 +202,7 @@ Consult `references/troubleshooting.md` for detailed error recovery.
 
 | Symptom | Solution |
 |---------|----------|
-| `secretctl: command not found` | Ask the user to install `secretctl` from https://getsesame.dev |
+| `secretctl: command not found` | Ask the user to install `secretctl` following Sesame's instructions |
 | "No device identity" | `secretctl login` |
 | "No tokens found" | `secretctl login` or `secretctl refresh` |
 | "You already have an active agent" | Use `secretctl refresh` or `secretctl login --new` |

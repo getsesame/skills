@@ -6,7 +6,7 @@
 The Sesame CLI is not installed or not on PATH.
 
 **Solution:**
-Ask the user to install `secretctl` by following the instructions at https://getsesame.dev. Do not attempt to install it automatically.
+Ask the user to install `secretctl` following Sesame's install instructions. Do not attempt to install it automatically — the skill never runs installers or shell downloads.
 
 If installed but not found, ensure the install location is on the user's PATH (default: `/usr/local/bin` or `~/.local/bin`).
 
@@ -20,7 +20,7 @@ No Ed25519 device keypair exists. This means the agent has never been registered
 secretctl login
 ```
 
-This will generate a claim URL for the user to open in their browser to approve the agent. The default broker is `https://getsesame.dev`.
+This will generate a claim URL for the user to open in their browser to approve the agent. The broker URL is configured at `secretctl` install time.
 
 ### "You already have an active agent"
 An agent is already registered on this device.
@@ -51,7 +51,7 @@ Both token refresh and challenge-response auth failed.
 - Device keys have been corrupted
 
 **Solution:**
-1. Check broker connectivity: `curl -s https://getsesame.dev/health`
+1. Check broker connectivity: `secretctl status` (reports whether the broker is reachable)
 2. Re-register: `secretctl login --new`
 
 ## Request Issues
@@ -94,9 +94,9 @@ Make a normal cURL request instead, or tell the user: "Nothing is configured in 
 The broker server is unreachable.
 
 **Checklist:**
-1. Check broker health: `curl -s https://getsesame.dev/health`
-2. Verify agent status: `secretctl status`
-3. Check network connectivity
+1. Check broker health + agent status: `secretctl status`
+2. Check network connectivity
+3. Confirm the configured broker URL with the user
 
 ### HTTP error responses (4xx, 5xx)
 These are responses from the upstream API, proxied through Sesame.
