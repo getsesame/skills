@@ -30,3 +30,4 @@ When installed, the Sesame skill teaches your AI agent to:
 | Skill | Description |
 |-------|-------------|
 | [sesame](skills/sesame/) | Proxy authenticated API calls through the Sesame broker via `secretctl` |
+| [sesame-onboard](skills/sesame-onboard/) | Walk a user through deploying a self-hosted Sesame broker to their own AWS (AWS CLI + login, Google setup with links, interactive dry-run, deploy) |
