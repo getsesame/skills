@@ -53,29 +53,35 @@ If the command is not found, stop and tell the user:
 
 Do not attempt to install `sesame` automatically. Installation is a one-time setup the user performs themselves — the skill never runs installers.
 
-### Register the agent
+### Register the agent — first run asks for the broker URL
 
-If this agent is not yet registered with the Sesame broker, run:
+If this agent is not yet registered (Step 1 below shows no active agent), you must register it. **Before registering, ask the user which broker to connect to** — there's no safe default to guess, and the answer is saved once and reused for every later call on this machine:
+
+> Which Sesame broker should I connect to?
+> - **Cloud** — `https://getsesame.dev`
+> - **Company self-hosted** — paste the broker URL your admin gave you (e.g. `https://54-159-97-177.sslip.io`)
+
+Then register against that URL:
 
 ```bash
-sesame login
+sesame login --broker-url <THE-URL>
 ```
 
-There are two registration modes:
+`sesame login` **persists the broker URL to this machine's config**, so you only pass `--broker-url` on the *first* login — every later `sesame request` / `sesame status` / `sesame refresh` reuses it automatically. (If the user explicitly says "the cloud one", plain `sesame login` works, since the default is `https://getsesame.dev`.)
 
-- **Mode B (default):** Agent-initiated. Generates a claim URL the user opens in their browser to approve the agent.
-- **Mode A (dashboard-initiated):** User creates a registration link in the dashboard and passes it to the agent:
+Registration modes:
+
+- **Mode B (default):** Agent-initiated. Generates a claim URL the user opens in the dashboard to approve the agent.
+- **Mode A (dashboard-initiated):** the user creates a registration link in the dashboard and passes it to the agent:
   ```bash
-  sesame login sesame-register:<token>
+  sesame login --broker-url <THE-URL> sesame-register:<token>
   ```
   Or with a bootstrap token directly:
   ```bash
-  sesame login --bootstrap-token <token>
+  sesame login --broker-url <THE-URL> --bootstrap-token <token>
   ```
 
-The broker URL is configured at `sesame` install time. Override for self-hosted brokers with `--broker-url` or the `SESAME_BROKER_URL` env var.
-
-If an agent is already registered on this device, `sesame login` will warn and suggest `sesame refresh` instead. To register an additional agent, use `--new`:
+If an agent is already registered on this device, `sesame login` warns and suggests `sesame refresh` instead. To register an additional agent, use `--new`:
 
 ```bash
 sesame login --new
@@ -100,8 +106,7 @@ Active: <agent-id>
 Tokens: present
 ```
 
-If no device identity exists or no agents are shown, tell the user:
-> You need to register this agent with Sesame first. Run: `sesame login`
+If no device identity exists or no agents are shown, this device isn't registered yet — go to **"Register the agent"** above: **ask the user for their broker URL** (cloud `https://getsesame.dev` or a company self-hosted URL), then run `sesame login --broker-url <url>`. Don't assume the cloud broker; many users run their own.
 
 ### Step 2: Check Available Hostnames (REQUIRED)
 
