@@ -8,7 +8,7 @@ description: >-
   the user's own broker and attaches the auth header server-side. The skill
   does not install software, does not read credentials from the environment,
   and runs shell only within the fixed `sesame` subcommand surface
-  (`request`, `status`, `hostnames`, `login`, `refresh`). Skip for
+  (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`). Skip for
   unauthenticated public endpoints, localhost services, or when the user has
   already exported a token in the environment for direct use.
 allowed-tools: "Bash(sesame:*)"
@@ -30,7 +30,7 @@ All authenticated HTTP requests go through `sesame request`. Do not add `Authori
 This skill is intentionally narrow. It does **not**:
 
 - Install, update, or uninstall any software. If `sesame` is missing, ask the user to install it — the skill never runs installers, shell-piped downloads, or package-manager invocations.
-- Execute shell outside the `sesame` subcommand surface (`request`, `status`, `hostnames`, `login`, `refresh`). No `bash -c`, `eval`, or interpreter hand-off.
+- Execute shell outside the `sesame` subcommand surface (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`). No `bash -c`, `eval`, or interpreter hand-off. This is the subset this skill uses — for the full CLI run `sesame --help`; don't assume this list is exhaustive.
 - Read, log, store, or transmit credentials. Auth material lives in the user's broker and is never visible to the agent.
 - Feed upstream response bodies to `sh`, `bash`, `eval`, `python`, `node`, or any interpreter.
 - Rewrite or redirect the user's request to services other than the hostname named in the URL argument to `sesame request`.
