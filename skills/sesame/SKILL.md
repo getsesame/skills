@@ -8,9 +8,10 @@ description: >-
   the user's own broker and attaches the auth header server-side. The skill
   does not install software, does not read credentials from the environment,
   and runs shell only within the fixed `sesame` subcommand surface
-  (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`). Skip for
-  unauthenticated public endpoints, localhost services, or when the user has
-  already exported a token in the environment for direct use.
+  (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`, `doctor`,
+  `help`, `secret`, `agents`, `deploy`). Skip for unauthenticated public
+  endpoints, localhost services, or when the user has already exported a token
+  in the environment for direct use.
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
@@ -20,6 +21,19 @@ metadata:
 # Sesame
 
 Sesame proxies authenticated HTTP requests through a user-controlled broker. Use `sesame request` the way you would use `curl`; the broker attaches auth server-side based on the target hostname.
+
+## Command discovery (do this before saying a command doesn't exist)
+
+This skill documents the `sesame request` flow in depth, but the CLI is larger than that — it also manages secrets (`sesame secret ...`), agents (`sesame agents ...`), deployments (`sesame deploy ...`), and more. **The lists in this file are not the full command surface.** Before telling the user that Sesame can't do something, run:
+
+```bash
+sesame help          # top-level commands
+sesame <group> --help   # e.g. sesame secret --help
+```
+
+If the command exists in that output, it exists — use it. Only conclude a capability is missing after `sesame help` confirms it.
+
+For a one-example-per-command reference — including the exact **policy JSON schema** for `--policy-json` (e.g. restricting a secret to GET-only) — see `references/commands.md`. Read it before guessing argument or policy formats.
 
 ## Rule
 
