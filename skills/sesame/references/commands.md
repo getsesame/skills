@@ -20,7 +20,7 @@ sesame login --broker-url https://my-broker.example   # register this agent (fir
 sesame login --new                              # register an additional agent on this device
 sesame refresh                                  # mint fresh tokens for the active agent
 sesame switch <agent-id>                        # make a different registered agent active
-sesame doctor                                   # diagnose config/connectivity issues
+sesame police                                   # audit this machine for plaintext secrets an agent could read (read-only)
 sesame help                                     # full top-level command list
 ```
 
