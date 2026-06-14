@@ -8,14 +8,14 @@ description: >-
   the user's own broker and attaches the auth header server-side. The skill
   does not install software, does not read credentials from the environment,
   and runs shell only within the fixed `sesame` subcommand surface
-  (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`, `doctor`,
+  (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`, `police`,
   `help`, `secret`, `agents`, `deploy`). Skip for unauthenticated public
   endpoints, localhost services, or when the user has already exported a token
   in the environment for direct use.
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
-  version: 0.4.0
+  version: 0.4.1
 ---
 
 # Sesame
