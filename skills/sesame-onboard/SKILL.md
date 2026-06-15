@@ -12,7 +12,7 @@ description: >-
 allowed-tools: "Bash(aws:*), Bash(sesame:*), Bash(curl:*), Bash(brew:*), Bash(unzip:*), Bash(uname:*)"
 metadata:
   author: sesame
-  version: 0.2.0
+  version: 0.2.1
 ---
 
 # Sesame self-host onboarding
@@ -23,20 +23,34 @@ prerequisites are met, explain each input, capture everything with a dry-run,
 summarize, then deploy.
 
 ## How you run the deploy
-- You run `sesame deploy aws` **non-interactively, with flags.** When an agent runs a
-  command there is no TTY, so the CLI's interactive prompts don't fire — the flags
-  drive everything. So your job is: **collect each value, then inject them as flags.**
+- You run `sesame deploy aws` **non-interactively, with flags** — *except* the Google
+  sign-in case, which the user runs themselves (so the client secret stays out of the
+  chat; see below and Step 7). When an agent runs a command there is no TTY, so the
+  CLI's interactive prompts don't fire — the flags drive everything. So your job is:
+  **collect each value, then inject every value except the Google client secret as flags.**
 - **AWS keys:** never handle these. The user logs into the AWS CLI themselves; you
   only verify with `aws sts get-caller-identity`.
-- **Google client secret:** don't *demand* they paste it. Walk them through getting it
-  (Step 4) and **confirm they have it ready** before deploying. If they paste it,
-  that's fine — pass it via `--google-client-secret`. If they'd rather it not enter the
-  chat, use the **secret-private fallback** in Step 7 (they run the deploy and type it
-  into the hidden prompt). Either way, **never proceed until they confirm the key is in
-  hand** — creating it takes a few minutes and the secret can only be copied once.
+- **Google client secret:** this is the one value you must never see. **Do not accept it
+  in the chat, and never pass `--google-client-secret`.** Walk them through getting it
+  (Step 4) and **confirm they have it in hand**, but when Google sign-in is on, **the
+  user runs the deploy themselves** (Step 7) so the CLI prompts for the secret with
+  hidden TTY input — it never passes through you or the command history. The client
+  *ID* is a public identifier, so `--google-client-id` is fine for you to pass. Never
+  proceed until they confirm the secret is in hand — creating it takes a few minutes and
+  it can only be copied once.
 - Work **one step at a time**; confirm each value before moving on.
 
 ---
+
+## Step 0 — Sesame CLI installed?
+You drive the whole deploy through the `sesame` CLI, so confirm it's present before anything else:
+```bash
+sesame --version
+```
+If "command not found", install it and re-run — don't continue until it works:
+```bash
+curl -fsSL https://getsesame.dev/install.sh | sh
+```
 
 ## Step 1 — AWS CLI installed?
 ```bash
@@ -82,7 +96,7 @@ If yes, walk them through it **one click at a time**:
 3. **Create the OAuth client:** https://console.cloud.google.com/auth/clients → **Create client** → Application type **Web application** → name it "Sesame".
 4. **Redirect URI — leave it for now.** It depends on the deploy's URL (which doesn't exist yet). They'll add it *after* deploy (Step 7). Saving the client without a final redirect URI is fine.
 5. **Copy the Client ID and Client Secret.** (If the secret was already created and they can't re-view it, click **+ Add secret** for a fresh one.)
-   - ⚠️ Tell them to keep the secret handy to **type into the CLI prompt** — they should **not** paste it to you.
+   - ⚠ Tell them to keep the secret handy to **type into the CLI prompt** — they should **not** paste it to you.
 6. **Allowed domain:**
    - **Workspace:** their domain, e.g. `company.com` (only that Workspace's accounts can sign in).
    - **No Workspace / personal Gmail:** **leave blank** — a personal Gmail has no Workspace `hd` claim, so setting a domain would lock them out. Blank = any verified Google account allowed; they should log in with the **admin email** from Step 3.
@@ -98,10 +112,10 @@ Build the flag list from what you collected and run it **with `--dry-run`**:
 ```bash
 sesame deploy aws --dry-run \
   --admin-email <email> --region <region> --database <rds|bundled> \
-  [--google-oauth --google-client-id <id> --google-client-secret <secret> \
+  [--google-oauth --google-client-id <id> \
    --google-allowed-domain <domain-or-omit-if-none>]
 ```
-It prints a **Plan** with everything resolved (secrets shown only as `set`) and **deploys nothing**. Read the Plan back to the user and fix any value before the real run. (For non-Workspace, omit `--google-allowed-domain`.)
+It prints a **Plan** with everything resolved and **deploys nothing**. The dry-run does not need the client secret. Read the Plan back to the user and fix any value before the real run. (For non-Workspace, omit `--google-allowed-domain`.)
 
 ## Step 6 — Summary of what's needed
 Before the real deploy, summarize for the user:
@@ -109,23 +123,35 @@ Before the real deploy, summarize for the user:
 - Admin email: `<email>`
 - Region: `<region>` · Database: `<rds|bundled>`
 - Google sign-in: **on/off**
-  - (if on) Client ID: provided · Client Secret: provided · Allowed domain: `<domain or "(none)">`
+  - (if on) Client ID: provided · Client Secret: in hand (entered at the hidden prompt when they run the deploy) · Allowed domain: `<domain or "(none)">`
   - (if on) Redirect URI to add after deploy: `https://<broker-url>/v1/auth/google/callback`
 
 ## Step 7 — Deploy
-Same flags, **without `--dry-run`**:
+
+**Password-only (no Google sign-in):** no secret is involved, so you run it — same flags, **without `--dry-run`**:
 ```bash
 sesame deploy aws \
-  --admin-email <email> --region <region> --database <rds|bundled> \
-  [--google-oauth --google-client-id <id> --google-client-secret <secret> \
-   --google-allowed-domain <domain>]
+  --admin-email <email> --region <region> --database <rds|bundled>
 ```
-It provisions the stack (~12–18 min; RDS is the long pole), then prints:
+
+**With Google sign-in:** the client secret must not pass through you, so **the user runs the deploy in their own terminal** — do **not** run this one yourself (you have no TTY, so the hidden secret prompt can't fire — the CLI exits with an error asking for `--google-client-secret`). The client ID is public and fine to include. Give them this command to run:
+```bash
+# The USER runs this in their own terminal — NOT the agent.
+sesame deploy aws \
+  --admin-email <email> --region <region> --database <rds|bundled> \
+  --google-oauth --google-client-id <id> \
+  [--google-allowed-domain <domain>]
+```
+The CLI then prompts `Google client secret:` — they type it there (hidden), never into the chat.
+
+> The `--google-client-secret` flag still exists for a user scripting a non-interactive deploy (e.g. pulling the secret from their own secret store in CI). That's their choice in their own terminal. **You, the agent, never use it** — putting the secret in a command you emit is exactly what we're avoiding.
+
+Either way it provisions the stack (~12–18 min; RDS is the long pole), then prints:
 - The **dashboard URL** (e.g. `https://54-159-97-177.sslip.io`)
 - The **admin setup link** (`/setup?token=…`)
 - (if Google) the exact **redirect URI**.
 
-**Secret-private fallback:** if the user doesn't want the Google client secret to enter the chat or the command, give them the command **without** `--google-client-id/--google-client-secret` and have them run it **themselves in their own terminal** — there, it's a TTY, so the CLI will interactively prompt for the client ID + secret (hidden input).
+When the **user** ran the deploy (the Google case), that output is in *their* terminal, not yours — **ask them to paste those three values back to you.** You need the dashboard URL and redirect URI to finish Step 8.
 
 ## Step 8 — Finish
 - Open the **setup link** → set the admin password → sign in.
