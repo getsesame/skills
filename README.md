@@ -10,6 +10,11 @@ npx skills add getsesame/skills
 
 This auto-detects your agent platform (Claude Code, Codex, Cursor, etc.) and installs the skill to the right location.
 
+> **Note on a global install:** `skills add --global` writes the skill for *every* supported agent. You may see a line like
+> `PromptScript does not support global skill installation` — this is **harmless**. PromptScript only supports project-level
+> installs, so it is skipped while the skill installs successfully for every other agent (the command still exits 0). For a
+> fully clean run, install from inside a project directory (scope is then project-level and every adapter succeeds).
+
 ## What it does
 
 When installed, the Sesame skill teaches your AI agent to:
