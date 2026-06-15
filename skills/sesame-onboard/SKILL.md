@@ -134,7 +134,7 @@ sesame deploy aws \
   --admin-email <email> --region <region> --database <rds|bundled>
 ```
 
-**With Google sign-in:** the client secret must not pass through you, so **the user runs the deploy in their own terminal** — do **not** run this one yourself (you have no TTY, so the secret prompt can't fire and it will hang). The client ID is public and fine to include. Give them this command to run:
+**With Google sign-in:** the client secret must not pass through you, so **the user runs the deploy in their own terminal** — do **not** run this one yourself (you have no TTY, so the hidden secret prompt can't fire — the CLI exits with an error asking for `--google-client-secret`). The client ID is public and fine to include. Give them this command to run:
 ```bash
 # The USER runs this in their own terminal — NOT the agent.
 sesame deploy aws \
