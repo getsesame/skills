@@ -12,7 +12,7 @@ description: >-
 allowed-tools: "Bash(aws:*), Bash(sesame:*), Bash(curl:*), Bash(brew:*), Bash(unzip:*), Bash(uname:*)"
 metadata:
   author: sesame
-  version: 0.2.1
+  version: 0.2.2
 ---
 
 # Sesame self-host onboarding
@@ -21,6 +21,9 @@ You guide the user through `sesame deploy aws`, which provisions an EC2 + RDS in
 **their** AWS account and returns an HTTPS dashboard URL. Your job: make sure the
 prerequisites are met, explain each input, capture everything with a dry-run,
 summarize, then deploy.
+
+> Additional documentation — including the full self-host deployment guide and
+> CLI reference — is available online at **https://docs.getsesame.dev**.
 
 ## How you run the deploy
 - You run `sesame deploy aws` **non-interactively, with flags** — *except* the Google

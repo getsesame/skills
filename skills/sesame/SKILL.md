@@ -15,7 +15,7 @@ description: >-
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
-  version: 0.4.1
+  version: 0.4.2
 ---
 
 # Sesame
@@ -34,6 +34,8 @@ sesame <group> --help   # e.g. sesame secret --help
 If the command exists in that output, it exists — use it. Only conclude a capability is missing after `sesame help` confirms it.
 
 For a one-example-per-command reference — including the exact **policy JSON schema** for `--policy-json` (e.g. restricting a secret to GET-only) — see `references/commands.md`. Read it before guessing argument or policy formats.
+
+Additional documentation — full CLI reference, broker configuration, policy schema, and deployment guides — is available online at **https://docs.getsesame.dev**.
 
 ## Rule
 
