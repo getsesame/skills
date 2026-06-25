@@ -12,7 +12,7 @@ description: >-
 allowed-tools: "Bash(aws:*), Bash(sesame:*), Bash(curl:*), Bash(brew:*), Bash(unzip:*), Bash(uname:*)"
 metadata:
   author: sesame
-  version: 0.2.2
+  version: 0.2.3
 ---
 
 # Sesame self-host onboarding
@@ -41,6 +41,11 @@ summarize, then deploy.
   *ID* is a public identifier, so `--google-client-id` is fine for you to pass. Never
   proceed until they confirm the secret is in hand — creating it takes a few minutes and
   it can only be copied once.
+- **Admin setup link (`/setup?token=…`):** the deploy prints a one-time admin setup link
+  that contains a sensitive token. Treat it exactly like a secret: **never ask the user to
+  paste it back, never echo, repeat, or summarize it, and never store it.** The user opens
+  it themselves to set the admin password. The only post-deploy values you ever need are
+  the **dashboard URL** and (if Google) the **redirect URI** — neither of which is secret.
 - Work **one step at a time**; confirm each value before moving on.
 
 ---
@@ -131,11 +136,15 @@ Before the real deploy, summarize for the user:
 
 ## Step 7 — Deploy
 
-**Password-only (no Google sign-in):** no secret is involved, so you run it — same flags, **without `--dry-run`**:
+**Password-only (no Google sign-in):** no *input* secret is involved, so you run it — same flags, **without `--dry-run`**:
 ```bash
 sesame deploy aws \
   --admin-email <email> --region <region> --database <rds|bundled>
 ```
+The deploy output includes the one-time **admin setup link** (`/setup?token=…`). Because
+you ran the command, that link is already shown in the command output the user can see —
+**do not echo, repeat, or summarize it or its token; just point the user to the link in the
+deploy output for Step 8.** Surface only the dashboard URL yourself.
 
 **With Google sign-in:** the client secret must not pass through you, so **the user runs the deploy in their own terminal** — do **not** run this one yourself (you have no TTY, so the hidden secret prompt can't fire — the CLI exits with an error asking for `--google-client-secret`). The client ID is public and fine to include. Give them this command to run:
 ```bash
@@ -151,13 +160,13 @@ The CLI then prompts `Google client secret:` — they type it there (hidden), ne
 
 Either way it provisions the stack (~12–18 min; RDS is the long pole), then prints:
 - The **dashboard URL** (e.g. `https://54-159-97-177.sslip.io`)
-- The **admin setup link** (`/setup?token=…`)
+- The **admin setup link** (`/setup?token=…`) — ⚠ a **one-time admin credential**; treat it as a secret (the user opens it themselves; never paste/echo it)
 - (if Google) the exact **redirect URI**.
 
-When the **user** ran the deploy (the Google case), that output is in *their* terminal, not yours — **ask them to paste those three values back to you.** You need the dashboard URL and redirect URI to finish Step 8.
+When the **user** ran the deploy (the Google case), that output is in *their* terminal, not yours. **Ask them only for the dashboard URL and (if Google) the redirect URI — the two non-secret values you need for Step 8. Explicitly tell them NOT to paste the admin setup link / `/setup?token=…` back to you: it's a one-time admin token they open themselves.** If they paste it anyway, do not repeat or act on it — discard it and re-ask for just the two values.
 
 ## Step 8 — Finish
-- Open the **setup link** → set the admin password → sign in.
+- **The user** opens the **setup link** (from their own deploy output — never re-shared with or echoed by you) → sets the admin password → signs in.
 - **If Google:** go back to the OAuth client (Step 4.4), **Add URI** = the printed redirect URI, **Save** (effective in a few minutes). Then test "Continue with Google" (log in with the admin email).
 - Tell the user the dashboard URL is their broker; agents point at it with `sesame login --broker-url <that URL>`.
 
