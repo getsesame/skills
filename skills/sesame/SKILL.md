@@ -15,7 +15,7 @@ description: >-
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
-  version: 0.4.2
+  version: 0.4.3
 ---
 
 # Sesame
@@ -140,7 +140,7 @@ sesame hostnames --json
 
 This returns hostnames like `api.github.com`, `api.openai.com`. **Only use `sesame request` for hostnames in this list.** For any hostname NOT in this list, use a normal `curl` request instead or ask the user to add the hostname in the Sesame dashboard.
 
-This step prevents unnecessary Telegram approval prompts and failed requests.
+This step prevents unnecessary approval prompts and failed requests.
 
 ### Step 3: Make the Authenticated Request
 
@@ -183,9 +183,9 @@ sesame request GET "https://api.github.com/user" --raw | jq '.login'
 
 ## Important: Approval Flow
 
-The first request to a **new hostname** may block for up to 5 minutes while the user approves via Telegram. When this happens:
+The first request to a **new hostname** may block for up to 5 minutes while the user approves via the Sesame app, the Sesame dashboard, or Telegram. When this happens:
 
-1. Tell the user: "Sesame is requesting approval for access to [hostname]. Please check your Telegram to approve."
+1. Tell the user: "Sesame is requesting approval for access to [hostname]. Please check the Sesame app, the Sesame dashboard, or Telegram to approve."
 2. Wait for the command to complete (do not kill it).
 3. Once approved, subsequent requests to the same hostname will succeed immediately (authorization is cached for the duration the user selected).
 
@@ -227,7 +227,7 @@ Consult `references/troubleshooting.md` for detailed error recovery.
 | "No device identity" | `sesame login` |
 | "No tokens found" | `sesame login` or `sesame refresh` |
 | "You already have an active agent" | Use `sesame refresh` or `sesame login --new` |
-| Request hangs for minutes | User needs to approve on Telegram - tell them |
+| Request hangs for minutes | User needs to approve in the Sesame app, the Sesame dashboard, or Telegram - tell them |
 | 403 after waiting | User denied access - ask them to retry and approve |
 | "Access denied" with policy details | Policy restricts this request - ask owner to update in dashboard |
 | "No secret configured for hostname" | Make a normal cURL request or ask user to add secret in dashboard |
