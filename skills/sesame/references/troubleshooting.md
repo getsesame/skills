@@ -57,15 +57,15 @@ Both token refresh and challenge-response auth failed.
 ## Request Issues
 
 ### Request hangs / takes a long time
-The broker is waiting for the user to approve access to this hostname via Telegram. This is normal for first-time access to a new API.
+The broker is waiting for the user to approve access to this hostname via the Sesame app, the Sesame dashboard, or Telegram. This is normal for first-time access to a new API.
 
 **What to do:**
-1. Tell the user to check their Telegram app
+1. Tell the user to check the Sesame app, the Sesame dashboard, or Telegram
 2. The approval message shows the hostname and offers duration options and policy presets (full access, read-only, custom)
 3. Once approved, subsequent requests to the same hostname will be instant
 
 ### 403 "Access denied by user"
-The user explicitly denied the access request on Telegram.
+The user explicitly denied the access request in the Sesame app, the Sesame dashboard, or Telegram.
 
 **Solution:**
 1. Ask the user if they intended to deny access
