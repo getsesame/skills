@@ -103,6 +103,8 @@ If an agent is already registered on this device, `sesame login` warns and sugge
 sesame login --new
 ```
 
+> **IMPORTANT — `sesame login` / `sesame login --new` BLOCK waiting for the user to approve in the dashboard.** They print a `https://.../register?agent=<id>` claim URL and then poll (`Waiting for approval...`, expires in ~15 min). The command will NOT return until the user clicks approve. The moment you run it, you MUST immediately tell the user, in the same turn: (1) that the command is now waiting on them, (2) the exact claim URL to open, and (3) that nothing else can proceed until they approve. Never run a login and go silent — the user has no other signal that action is required from them. The same applies to any first-request approval flow (Telegram/dashboard) described below: as soon as a command is pending on a human, surface it right away rather than waiting to be asked.
+
 ## Instructions
 
 ### Step 1: Pre-flight Check
