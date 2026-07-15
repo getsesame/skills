@@ -41,6 +41,11 @@ Read the JSON. The fields you drive off:
 - `seat` — `in-container` | `vps-host` | `bare` | `unknown`
 - `mechanism` — `container-entrypoint` | `systemd-system` | `systemd-user` | `launchd` | `bare-process` | `unknown`
 - `product_hint` — best-effort agent name (label only; never gate on it)
+- `agent` — the glanceable summary of what was found: `{product, pid, command,
+  config_path, wrapped, wrap_target}`. **`wrap_target` is the precomputed
+  `--install-wrapper` invocation** — `{kind, ref, flags}` — so you never have to
+  fish the unit/label/entrypoint out of evidence; `null` means bare-process
+  (nothing durable to wrap).
 - `egress.targets[]` — each `{host, provider, auth_kind, agent_holds_cred, brokered}`
   — **this is the ground truth for which hostnames to broker** (host ≠ brand name)
 - `next[]` — an ordered checklist of step ids to execute (see the table below)
@@ -73,10 +78,11 @@ Map each step id from `detect.next` (and re-`detect` after big changes):
 | `neutralize:<provider>` | go keyless — see **Step E** (only after verify is PROTECTED) |
 | `verify` | `sesame onboard verify` — the gate, see **Step D** |
 
-### Step A — Wrap the agent (from `mechanism`)
+### Step A — Wrap the agent (from `agent.wrap_target`)
 
-Pick the command by `mechanism` (the launch target is in `detect.evidence.launch_exec`
-/ `entrypoint_path` / the systemd unit name):
+Easiest path: read `agent.wrap_target` from detect — it IS the invocation:
+`sesame launch --install-wrapper <ref> <flags...>`. When it's `null`
+(bare-process), see the last bullet. The per-mechanism forms, for reference:
 
 - `container-entrypoint` → `sesame launch --install-wrapper <entrypoint_path>`
   (usually `/entrypoint.sh`)
