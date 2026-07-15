@@ -82,14 +82,21 @@ Pick the command by `mechanism` (the launch target is in `detect.evidence.launch
   (usually `/entrypoint.sh`)
 - `systemd-user` → `sesame launch --install-wrapper <unit>.service --unit --user`
 - `systemd-system` → `sesame launch --install-wrapper <unit>.service --unit`
+- `launchd` (macOS) → `sesame launch --install-wrapper <label> --launchd`
+  (the value is the launchd label from detect, e.g. `com.nousresearch.hermes`,
+  or a plist path; it rewrites the plist's ProgramArguments in place, backup
+  kept). A `/Library/LaunchDaemons` plist needs sudo; `~/Library/LaunchAgents`
+  doesn't.
 - `bare-process` (no supervisor) → there's nothing persistent to rewrite. Tell the
   human: either run the agent as `sesame launch -- <their command>`, or (better, so
-  it survives reboot) create a systemd unit and wrap that. Don't fabricate a unit.
+  it survives reboot) create a systemd unit / launchd LaunchAgent and wrap that.
+  Don't fabricate a unit.
 
-The wrapper commands print the exact `systemctl restart …` line to apply the change.
-**Restarting bounces the agent**, so confirm with the human before running it (a
-`--user` unit restart needs no sudo; a system unit does). Reverting is always
-`sesame launch --revert-wrapper <same args>`.
+The wrapper commands print the exact command to apply the change — `systemctl
+restart …` for units, `launchctl unload … && launchctl load …` for plists.
+**Applying it bounces the agent**, so confirm with the human before running it (a
+`--user` unit restart needs no sudo; a system unit or LaunchDaemon does). Reverting
+is always `sesame launch --revert-wrapper <same args>`.
 
 ### Step B — Broker each egress host — HUMAN GATE #2 (secret value)
 
