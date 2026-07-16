@@ -46,9 +46,19 @@ Read the JSON. The fields you drive off:
   `--install-wrapper` invocation** — `{kind, ref, flags}` — so you never have to
   fish the unit/label/entrypoint out of evidence; `null` means bare-process
   (nothing durable to wrap).
+- `agents[]` — **every** agent running on the box, one per product (`{product,
+  pid, command, wrapped}`). `agent` above is just the primary one detect drilled
+  into.
 - `egress.targets[]` — each `{host, provider, auth_kind, agent_holds_cred, brokered}`
   — **this is the ground truth for which hostnames to broker** (host ≠ brand name)
 - `next[]` — an ordered checklist of step ids to execute (see the table below)
+
+**If `agents[]` has more than one entry, STOP and ASK the human which agent to
+onboard** — a dev box often runs several (e.g. openclaw beside hermes), and the
+primary was a best guess. Once they choose, re-run `sesame onboard detect --agent
+<name> --json` (e.g. `--agent hermes`) so the whole report — egress, wrap_target,
+next — reflects the agent they actually mean. Never silently onboard the one detect
+happened to pick.
 
 If `seat`/`mechanism` are `unknown` (detect emits `manual-review`), do NOT force a
 guess — the `egress` section may still be populated (use it), and otherwise ask the
