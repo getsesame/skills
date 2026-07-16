@@ -44,8 +44,10 @@ Read the JSON. The fields you drive off:
 - `agent` — the glanceable summary of what was found: `{product, pid, command,
   config_path, wrapped, wrap_target}`. **`wrap_target` is the precomputed
   `--install-wrapper` invocation** — `{kind, ref, flags}` — so you never have to
-  fish the unit/label/entrypoint out of evidence; `null` means bare-process
-  (nothing durable to wrap).
+  fish the unit/label/entrypoint out of evidence. `kind: console-shim` is the
+  universal `--shim` wrap for a bare agent's venv entry (desktop app / terminal /
+  backgrounded — all launch paths). `null` only when there's no file to act on
+  (e.g. `python -m module` or a compiled binary).
 - `agents[]` — **every** agent running on the box, one per product (`{product,
   pid, command, wrapped}`). `agent` above is just the primary one detect drilled
   into.
@@ -103,10 +105,18 @@ Easiest path: read `agent.wrap_target` from detect — it IS the invocation:
   or a plist path; it rewrites the plist's ProgramArguments in place, backup
   kept). A `/Library/LaunchDaemons` plist needs sudo; `~/Library/LaunchAgents`
   doesn't.
-- `bare-process` (no supervisor) → there's nothing persistent to rewrite. Tell the
-  human: either run the agent as `sesame launch -- <their command>`, or (better, so
-  it survives reboot) create a systemd unit / launchd LaunchAgent and wrap that.
-  Don't fabricate a unit.
+- `bare-process` with a venv console-script → `console-shim`:
+  `sesame launch --install-wrapper <…/venv/bin/hermes> --shim`. This is the
+  **universal wrap** for an agent you don't launch yourself — it rewrites the
+  console-script entry so the agent comes up under Sesame *however* it's started:
+  desktop app, terminal, or backgrounded (all funnel through that one entry). It's
+  guarded against double-wrap (re-installing is a no-op) and never breaks the agent
+  (if `sesame` is missing at runtime it runs unwrapped). **Requires restarting the
+  agent** so the new launch path takes effect — tell the human that plainly.
+- `bare-process` with no shimmable file (`wrap_target` is `null` — e.g. the agent
+  runs as `python -m module` or a compiled binary) → tell the human: either run it
+  as `sesame launch -- <their command>`, or (better, so it survives reboot) create a
+  systemd unit / launchd LaunchAgent and wrap that. Don't fabricate a unit.
 
 The wrapper commands print the exact command to apply the change — `systemctl
 restart …` for units, `launchctl unload … && launchctl load …` for plists.
