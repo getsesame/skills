@@ -10,7 +10,8 @@ description: >-
   and runs shell only within the fixed `sesame` subcommand surface
   (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`, `police`
   — incl. its `--auto`/`--yes`/`--verify`/`--backup`/`--neutralize` migration
-  flags — `help`, `secret`, `agents`, `deploy`). Skip for unauthenticated public
+  flags — `trust`, `help`, `secret`, `agents`, `deploy`). Skip for
+  unauthenticated public
   endpoints, localhost services, or when the user has already exported a token
   in the environment for direct use.
 allowed-tools: "Bash(sesame:*)"
