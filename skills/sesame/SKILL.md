@@ -16,7 +16,7 @@ description: >-
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
-  version: 0.4.3
+  version: 0.4.4
 ---
 
 # Sesame
@@ -58,17 +58,17 @@ Command execution is bounded to one CLI with a fixed subcommand vocabulary, in t
 
 ### Ensure sesame is installed
 
-Before doing anything else, check whether `sesame` is available on this device:
+Before doing anything else, locate the `sesame` binary. Check PATH first, then known install locations — in wrapped setups (OpenClaw containers, etc.) it is often installed but not yet on a fresh shell's PATH:
 
 ```bash
-which sesame
+which sesame || ls /data/.local/bin/sesame ~/.local/bin/sesame 2>/dev/null
 ```
 
-If the command is not found, stop and tell the user:
+If any path prints, sesame IS installed — use that binary (call it by full path, e.g. `/data/.local/bin/sesame`, when `which` missed) and continue. Only if NONE resolve, tell the user:
 
 > `sesame` is not installed on this device. Please follow Sesame's install instructions, then run `sesame login`. Once it's installed, ask me again.
 
-Do not attempt to install `sesame` automatically. Installation is a one-time setup the user performs themselves — the skill never runs installers.
+Never ask the user for an API key or token just because `which sesame` missed — check the full paths first. Do not install `sesame` automatically; installation is a one-time setup the user performs themselves.
 
 ### Register the agent — first run asks for the broker URL
 
