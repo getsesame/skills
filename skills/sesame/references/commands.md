@@ -31,6 +31,32 @@ sesame hostnames            # hostnames that have a secret configured (use these
 sesame hostnames --json
 ```
 
+## Transparent egress (wrap unmodified agents)
+
+```bash
+sesame launch -- python agent.py        # run any command with brokered egress transparently mediated
+sesame init                             # print the proxy/CA env exports (headless/CI)
+sesame onboard hermes --dry-run         # read-only plan: detected Hermes surfaces, owners, restart preview
+sesame onboard hermes                   # restart safe targets through Sesame; installs OS trust; ends with doctor
+sesame onboard hermes --verify-only     # recheck an installed setup without changing anything
+sesame onboard hermes --rollback <id>   # restore one target's original launch configuration
+sesame trust                            # install the tenant root into the OS trust store (once per machine)
+sesame trust --uninstall                # reverse it
+sesame doctor --json                    # per-runtime trust verification; exit 1 on any failure
+sesame proxyd install                   # download the edge proxy binary
+sesame egress uninstall --dry-run       # preview reversible machine-wide egress removal
+```
+
+## Access grants & proxy keys
+
+```bash
+sesame access list                      # standing authorizations for this user's agents
+sesame access add api.example.com --path "/v1/**" --methods GET   # scoped standing access
+sesame proxy-key create                 # mint an edge-proxy bearer credential
+sesame proxy-key list
+sesame proxy-key revoke <prefix>
+```
+
 ## Secrets (draft flow — values are pasted in the dashboard, never the CLI)
 
 `sesame secret create` returns a 15-minute dashboard link; the user opens it
