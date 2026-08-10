@@ -95,12 +95,32 @@ sesame agents deregister <agent-id>     # revoke an agent (kills sessions + refr
 
 ```bash
 sesame deploy aws --admin-email you@example.com   # provision broker in your AWS account
-sesame deploy status                              # CloudFormation stack + broker health
-sesame deploy update --image-tag main-abc1234     # pull a new image; migrations apply on broker start
+sesame deploy status                              # CloudFormation stack + broker health + running version
+sesame deploy update                              # converge the box: install/enable the auto-updater, pull, recreate
+sesame deploy update --image-tag v0.3.70          # pin a specific version — PAUSES auto-update so the pin sticks
 sesame deploy restart                             # restart the broker container
 sesame deploy logs                                # tail broker logs
 sesame deploy destroy                             # tear down the stack
 ```
+
+Self-hosted brokers auto-update: an updater sidecar on each box follows the
+`ghcr.io/getsesame/sesame:stable` channel (~30 min poll), so `deploy update`
+is only needed to enable it on older boxes or for emergency pins. A plain
+`deploy update` re-enables auto-update after a pin
+(`SESAME_AUTO_UPDATE=false` in the box `.env` is the pause flag).
+
+## CLI self-update
+
+```bash
+sesame update            # update the CLI to the latest release now
+sesame update --check    # report whether an update exists, don't install
+```
+
+The CLI also updates itself automatically: each invocation does a throttled
+(30-min) check and, when a newer release exists, runs the installer in the
+background — the invoked command is never delayed; a one-line notice goes to
+stderr. Opt out with `SESAME_CLI_AUTO_UPDATE=false` in the environment.
+Auto-update never runs from source checkouts or when `CI` is set.
 
 ## Policy JSON
 
