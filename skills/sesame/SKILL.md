@@ -11,13 +11,13 @@ description: >-
   (`request`, `status`, `hostnames`, `login`, `refresh`, `switch`, `police`
   — incl. its `--auto`/`--yes`/`--verify`/`--backup`/`--neutralize` migration
   flags — `launch`, `init`, `onboard`, `trust`, `doctor`, `proxyd`, `egress`,
-  `access`, `proxy-key`, `help`, `secret`, `agents`, `deploy`, `update`). Skip for
+  `proxy-key`, `help`, `secret`, `agents`, `deploy`, `update`). Skip for
   unauthenticated public endpoints, localhost services, or when the user has
   already exported a token in the environment for direct use.
 allowed-tools: "Bash(sesame:*)"
 metadata:
   author: getsesame
-  version: 0.5.0
+  version: 0.6.0
 ---
 
 # Sesame
@@ -285,7 +285,8 @@ Consult `references/troubleshooting.md` for detailed error recovery.
 | "No tokens found" | `sesame login` or `sesame refresh` |
 | "You already have an active agent" | Use `sesame refresh` or `sesame login --new` |
 | Request hangs for minutes | User needs to approve in the Sesame app, the Sesame dashboard, or Telegram - tell them |
-| 403 after waiting | User denied access - ask them to retry and approve |
+| 403 after waiting | User denied access - do NOT re-issue the request; tell the user it was denied and stop |
+| 403 "cooldown active" | A recent denial is still in its cooldown window - do NOT retry; the wait doubles with each denial |
 | "Access denied" with policy details | Policy restricts this request - ask owner to update in dashboard |
 | "No secret configured for hostname" | Make a normal cURL request or ask user to add secret in dashboard |
 | Connection refused | Broker may be down - check `sesame status` |

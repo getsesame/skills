@@ -68,9 +68,12 @@ The broker is waiting for the user to approve access to this hostname via the Se
 The user explicitly denied the access request in the Sesame app, the Sesame dashboard, or Telegram.
 
 **Solution:**
-1. Ask the user if they intended to deny access
-2. If it was a mistake, retry the request - a new approval prompt will be sent
-3. The user can also grant access proactively via the Sesame dashboard
+1. Do NOT re-issue the request. Report the denial to the user and stop.
+2. The broker enforces a cooldown after a denial, and it doubles with each
+   repeat (1 → 2 → 4 → 8 → 15 minutes, capped at 15). Retrying inside the
+   window returns 403 "cooldown active" and reaches nobody.
+3. If the denial was a mistake, the user grants access from the Sesame
+   dashboard — that clears the block without any retry from you.
 
 ### 403 "Access denied" with policy details
 The request was blocked by the access policy set for this secret (e.g., wrong HTTP method, restricted path, disallowed subdomain).

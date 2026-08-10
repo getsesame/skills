@@ -47,11 +47,11 @@ sesame proxyd install                   # download the edge proxy binary
 sesame egress uninstall --dry-run       # preview reversible machine-wide egress removal
 ```
 
-## Access grants & proxy keys
+## Proxy keys
+
+Scoped access policies are viewed and edited in the Sesame dashboard, not the CLI.
 
 ```bash
-sesame access list                      # standing authorizations for this user's agents
-sesame access add api.example.com --path "/v1/**" --methods GET   # scoped standing access
 sesame proxy-key create                 # mint an edge-proxy bearer credential
 sesame proxy-key list
 sesame proxy-key revoke <prefix>
